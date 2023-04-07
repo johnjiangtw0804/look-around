@@ -25,5 +25,4 @@ start-pg:stop-pg
 				postgres:13.4-alpine
 restart-pg: stop-pg
 run:
-	echo ${DATABASE_URL}
 	@go run main.go
