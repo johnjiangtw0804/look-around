@@ -17,18 +17,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Auth interface {
+type AuthHandler interface {
 	login(ctx *gin.Context)
 	register(ctx *gin.Context)
 }
 
-func NewAuth(repo repo.UserRepo, logger *zap.Logger) Auth {
-	return &auth{repo, logger}
-}
-
-type auth struct {
+type authHandler struct {
 	repo   repo.UserRepo
 	logger *zap.Logger
+}
+
+func NewAuthHandler(logger *zap.Logger, repo repo.UserRepo) AuthHandler {
+	return &authHandler{
+		repo:   repo,
+		logger: logger,
+	}
 }
 
 const jwtExpPeriod = 7 * 24 * time.Hour
@@ -38,7 +41,7 @@ type loginReq struct {
 	Password string `json:"password" binding:"required"`
 }
 
-func (a *auth) login(ctx *gin.Context) {
+func (a *authHandler) login(ctx *gin.Context) {
 	req := &loginReq{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		a.logger.Warn("Warn: invalid request body")
@@ -93,7 +96,7 @@ type signUpReq struct {
 	Address  string `json:"address"`
 }
 
-func (a *auth) register(ctx *gin.Context) {
+func (a *authHandler) register(ctx *gin.Context) {
 	req := &signUpReq{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		a.logger.Warn("Warn: invalid request body")

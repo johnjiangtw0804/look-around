@@ -17,11 +17,17 @@ func Register(
 	userRepo := repository.NewUserRepo(db)
 
 	// Register handlers for no authentication API
-	auth := NewAuth(userRepo, logger)
+	authHandler := NewAuthHandler(logger, userRepo)
 	noAuthRouters := router.Group("")
-	noAuthRouters.POST("/api/auth/register", auth.register)
-	noAuthRouters.POST("/api/auth/login", auth.login)
+	noAuthRouters.POST("/api/auth/register", authHandler.register)
+	noAuthRouters.POST("/api/auth/login", authHandler.login)
 
-	// router group to add middle ware for authentication TODO
+	authRouters := router.Group("", authenticate(userRepo, logger))
+	// router group to add middle ware for authentication
+	userHandler := NewUserHandler(logger, userRepo)
+
+	authRouters.GET("/api/user/events", userHandler.listEvents)
+	authRouters.POST("/api/user/events/:id/like", userHandler.likeEvent)
+	authRouters.POST("/api/user/events/:id/dislike", userHandler.dislikeEvent)
 	return router
 }

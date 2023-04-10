@@ -7,16 +7,33 @@ import (
 	"go.uber.org/zap"
 )
 
+type UserHandler interface {
+	listEvents(ctx *gin.Context)
+	likeEvent(ctx *gin.Context)
+	dislikeEvent(ctx *gin.Context)
+}
+
+func NewUserHandler(logger *zap.Logger, repo repository.UserRepo) UserHandler {
+	return &userHandler{
+		logger:   logger,
+		userRepo: repo,
+	}
+}
+
 type userHandler struct {
-	router   *gin.Engine
 	logger   *zap.Logger
 	userRepo repository.UserRepo
 }
 
-func NewUserHandler(router *gin.Engine, logger *zap.Logger, userRepo repository.UserRepo) *userHandler {
-	return &userHandler{
-		router:   router,
-		logger:   logger,
-		userRepo: userRepo,
-	}
+func (u *userHandler) listEvents(ctx *gin.Context) {
+	
+
+}
+
+func (u *userHandler) likeEvent(ctx *gin.Context) {
+
+}
+
+func (u *userHandler) dislikeEvent(ctx *gin.Context) {
+
 }

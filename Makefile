@@ -11,18 +11,24 @@ DB_NAME ?= look_around
 DATABASE_URL ?= sslmode=disable host=${DB_HOST} port=${DB_PORT} user=${DB_USER} password=${DB_PASSWORD} dbname=${DB_NAME}
 
 #
+# Ticket master API key
+#
+TICKET_MASTER_API_KEY ?= XbJGpDikv93zCALbmNKU6l5NWK26BP1T
+#
 # postgres
 #
 stop-pg:
 	@echo "stop postgres..."
 	@docker stop look-around-pg | true
 
-start-pg:stop-pg
+restart-pg: stop-pg
 	@echo "restart postgres..."
 	@docker run -d --rm --name look-around-pg \
 				-p 5432:5432 -e POSTGRES_DB=look_around \
 				-e POSTGRES_USER=jonathan -e POSTGRES_PASSWORD=john0804 \
 				postgres:13.4-alpine
-restart-pg: stop-pg
+
 run:
 	@go run main.go
+
+

@@ -7,6 +7,7 @@ type (
 		Debug        bool   `envconfig:"DEBUG" default:"false"`
 		Port         int    `envconfig:"PORT" default:"8080" required:"true"`
 		DATABASE_URL string `envconfig:"DATABASE_URL" required:"true"`
+		API_KEY      string `envconfig:"TICKET_MASTER_API_KEY" required:"true"`
 	}
 )
 
