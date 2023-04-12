@@ -1,7 +1,8 @@
 package routes
 
 import (
-	"look-around/internal/database"
+	"look-around/envconfig"
+	api "look-around/external/api"
 	"look-around/repository"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +12,8 @@ import (
 func Register(
 	router *gin.Engine,
 	logger *zap.Logger,
-	db *database.GormDatabase,
+	db *repository.GormDatabase,
+	env *envconfig.Env,
 ) *gin.Engine {
 	// Create Repo instances
 	userRepo := repository.NewUserRepo(db)
@@ -24,7 +26,7 @@ func Register(
 
 	authRouters := router.Group("", authenticate(userRepo, logger))
 	// router group to add middle ware for authentication
-	userHandler := NewUserHandler(logger, userRepo)
+	userHandler := NewUserHandler(logger, userRepo, api.NewMapUtilities(env.GOOGLE_MAP_API_KEY), api.NewEventsSearcher(env.TICKET_MASTER_API_KEY))
 
 	authRouters.GET("/api/user/events", userHandler.listEvents)
 	authRouters.POST("/api/user/events/:id/like", userHandler.likeEvent)

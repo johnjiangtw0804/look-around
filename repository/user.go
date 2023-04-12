@@ -2,8 +2,7 @@ package repository
 
 import (
 	"bytes"
-	"look-around/internal/database"
-	"look-around/internal/database/model"
+	"look-around/repository/schema"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -15,29 +14,29 @@ const (
 )
 
 type UserRepo interface {
-	InsertUser(user model.User) error
-	SelectUserByID(id uuid.UUID) (model.User, error)
-	SelectUserByUsername(username string) (model.User, error)
+	InsertUser(user schema.User) error
+	SelectUserByID(id uuid.UUID) (schema.User, error)
+	SelectUserByUsername(username string) (schema.User, error)
 }
 
 type userRepo struct {
-	db *database.GormDatabase
+	db *GormDatabase
 }
 
-func NewUserRepo(db *database.GormDatabase) UserRepo {
+func NewUserRepo(db *GormDatabase) UserRepo {
 	return &userRepo{db}
 }
 
-func (u *userRepo) SelectUserByID(id uuid.UUID) (model.User, error) {
-	var user model.User
-	if err := u.db.DB.Model(&model.User{}).Where("id = ?", id).First(&user).Error; err != nil {
+func (u *userRepo) SelectUserByID(id uuid.UUID) (schema.User, error) {
+	var user schema.User
+	if err := u.db.DB.Model(&schema.User{}).Where("id = ?", id).First(&user).Error; err != nil {
 		return user, err
 	}
 	return user, nil
 }
 
-func (u *userRepo) InsertUser(user model.User) error {
-	// add sal to password and hash it
+func (u *userRepo) InsertUser(user schema.User) error {
+	// add salt to password and hash it
 	passwordBuf := bytes.Buffer{}
 	passwordBuf.WriteString(user.Password)
 	passwordBuf.WriteString(Salt)
@@ -53,9 +52,9 @@ func (u *userRepo) InsertUser(user model.User) error {
 	return nil
 }
 
-func (u *userRepo) SelectUserByUsername(username string) (model.User, error) {
-	var user model.User
-	if err := u.db.DB.Model(&model.User{}).Where("user_name = ?", username).First(&user).Error; err != nil {
+func (u *userRepo) SelectUserByUsername(username string) (schema.User, error) {
+	var user schema.User
+	if err := u.db.DB.Model(&schema.User{}).Where("user_name = ?", username).First(&user).Error; err != nil {
 		return user, err
 	}
 	return user, nil

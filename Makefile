@@ -14,6 +14,12 @@ DATABASE_URL ?= sslmode=disable host=${DB_HOST} port=${DB_PORT} user=${DB_USER} 
 # Ticket master API key
 #
 TICKET_MASTER_API_KEY ?= XbJGpDikv93zCALbmNKU6l5NWK26BP1T
+
+#
+# Google Map API key
+#
+GOOGLE_MAP_API_KEY ?= AIzaSyAK8PWrSj_u7hmnnHHglGrYXJ8Zx-24VsY
+
 #
 # postgres
 #
@@ -28,7 +34,14 @@ restart-pg: stop-pg
 				-e POSTGRES_USER=jonathan -e POSTGRES_PASSWORD=john0804 \
 				postgres:13.4-alpine
 
+#
+# Assume we are all mac users
+# Before using the Go bindings, you must install the libpostal C library. Make sure you have the following prerequisites:
+#
+install-prerequisites:
+	@brew install curl autoconf automake libtool pkg-config || true
 run:
+	@echo "install ... "
 	@go run main.go
 
 

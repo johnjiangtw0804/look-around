@@ -1,9 +1,8 @@
 package main
 
 import (
-	"log"
 	"look-around/envconfig"
-	"look-around/internal/database"
+	"look-around/repository"
 	"look-around/routes"
 	"os"
 	"os/signal"
@@ -21,24 +20,24 @@ func main() {
 	var err error
 	logger, err = zap.NewProduction()
 	if err != nil {
-		log.Fatal("Error: failed to initialize logger ", err)
+		logger.Error("failed to initialize logger ", zap.String("error message", err.Error()))
 	}
 	err = envconfig.Process(&env)
 	if err != nil {
-		log.Fatal("Error: failed to load config from env vars ", err)
+		logger.Error("failed to load config from env vars ", zap.String("error message", err.Error()))
 	}
 	gin.SetMode(gin.ReleaseMode)
 
-	db, err := database.NewGormDatabase(env.DATABASE_URL, env.Debug)
+	db, err := repository.NewGormDatabase(env.DATABASE_URL, env.Debug)
 	if err != nil {
-		log.Fatal("Error: failed to connect to database ", err)
+		logger.Error("failed to connect to database ", zap.String("error message", err.Error()))
 	}
 	if err := db.AutoMigrate(); err != nil {
-		log.Fatal("Error: failed to migrate database ", err)
+		logger.Error("failed to migrate database ", zap.String("error message", err.Error()))
 	}
 	logger.Info("Finished migrating database")
 
-	server := routes.Register(gin.Default(), logger, db)
+	server := routes.Register(gin.Default(), logger, db, &env)
 	go func() {
 		server.Run(":8080")
 	}()

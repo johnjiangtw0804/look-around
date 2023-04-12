@@ -26,6 +26,7 @@ require (
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/openvenues/gopostal v0.0.0-20171226154602-e0184512a45d // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pierrre/geohash v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

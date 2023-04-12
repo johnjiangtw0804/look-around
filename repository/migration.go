@@ -1,7 +1,7 @@
-package database
+package repository
 
 import (
-	"look-around/internal/database/model"
+	"look-around/repository/schema"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -32,7 +32,7 @@ func (d *GormDatabase) AutoMigrate() error {
 	// enable format UUID as PK
 	d.DB.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
 	if err := d.DB.AutoMigrate(
-		&model.User{},
+		&schema.User{},
 	); err != nil {
 		return err
 	}

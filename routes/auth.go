@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	model "look-around/internal/database/model"
 	repo "look-around/repository"
+	schema "look-around/repository/schema"
 	"look-around/token"
 	"net/http"
 	"strings"
@@ -34,6 +34,7 @@ func NewAuthHandler(logger *zap.Logger, repo repo.UserRepo) AuthHandler {
 	}
 }
 
+const _ctxKey_UserID = "userID"
 const jwtExpPeriod = 7 * 24 * time.Hour
 
 type loginReq struct {
@@ -105,7 +106,8 @@ func (a *authHandler) register(ctx *gin.Context) {
 	}
 	json, _ := json.Marshal(req)
 	a.logger.Info("Info: user req" + string(json))
-	if err := a.repo.InsertUser(model.User{
+
+	if err := a.repo.InsertUser(schema.User{
 		UserName: req.Username,
 		Password: req.Password,
 		Gender:   req.Gender,
@@ -153,5 +155,6 @@ func authenticate(repo repo.UserRepo, logger *zap.Logger) gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+		ctx.Set(_ctxKey_UserID, userClaims.UserID)
 	}
 }
