@@ -33,6 +33,8 @@ func (d *GormDatabase) AutoMigrate() error {
 	d.DB.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
 	if err := d.DB.AutoMigrate(
 		&schema.User{},
+		&schema.UserLikeGenre{},
+		&schema.UserDislikeGenre{},
 	); err != nil {
 		return err
 	}

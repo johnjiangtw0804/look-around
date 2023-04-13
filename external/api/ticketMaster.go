@@ -53,12 +53,16 @@ type image struct {
 	URL string `json:"url"`
 }
 type Dates struct {
-	Start start `json:"start"`
+	Start    start  `json:"start"`
+	Timezone string `json:"timezone"`
+	Status   status `json:"status"`
+}
+type status struct {
+	Code string `json:"code"`
 }
 type start struct {
 	LocalDate string `json:"localDate"`
 	LocalTime string `json:"localTime"`
-	Timezone  string `json:"timezone"`
 }
 type classification struct {
 	Genre    genre `json:"genre"`
@@ -121,15 +125,14 @@ func (t *ticketMasterEventsSearcher) ListEvents(latitude, longitude float64, rad
 	if err != nil {
 		return TicketMasterDiscoveryResp{}, err
 	}
-	// build item from response
+	if res.StatusCode != http.StatusOK {
+		return TicketMasterDiscoveryResp{}, errors.New("error status: " + res.Status)
+	}
 	ticketMasterRespBytes, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return TicketMasterDiscoveryResp{}, err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return TicketMasterDiscoveryResp{}, errors.New("error status: " + res.Status)
-	}
 	var ticketMasterResp TicketMasterDiscoveryResp
 	if err := json.Unmarshal(ticketMasterRespBytes, &ticketMasterResp); err != nil {
 		return TicketMasterDiscoveryResp{}, err

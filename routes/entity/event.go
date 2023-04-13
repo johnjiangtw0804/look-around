@@ -18,4 +18,5 @@ type Date struct {
 	LocalDate string `json:"localDate"`
 	LocalTime string `json:"localTime"`
 	Timezone  string `json:"timezone"`
+	Status    string `json:"status"`
 }

@@ -62,7 +62,8 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 		ctx.JSON(500, gin.H{"error": "failed to get events"})
 		return
 	}
-	// convert JSONArray to list of items
+
+	// compose responses
 	eventsToOccur := make(map[*entity.Event]int)
 	events := make([]entity.Event, 0)
 	for _, event := range resp.Embedded.Events {
@@ -78,7 +79,8 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 			Date: entity.Date{
 				LocalDate: event.Dates.Start.LocalDate,
 				LocalTime: event.Dates.Start.LocalTime,
-				Timezone:  event.Dates.Start.Timezone,
+				Timezone:  event.Dates.Timezone,
+				Status:    event.Dates.Status.Code,
 			},
 			Address: event.EmbeddedVenues.Venues[0].Address.Line1 + ", " + event.
 				EmbeddedVenues.Venues[0].City.Name + ", " +
@@ -103,6 +105,9 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 }
 
 func (u *userHandler) likeEvent(ctx *gin.Context) {
+	// userID := ctx.Param("user_id")
+	// genre := ctx.PostForm("genre")
+	// subGenre := ctx.PostForm("sub_genre")
 
 }
 

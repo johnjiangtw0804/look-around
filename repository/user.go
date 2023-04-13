@@ -59,3 +59,7 @@ func (u *userRepo) SelectUserByUsername(username string) (schema.User, error) {
 	}
 	return user, nil
 }
+
+// func (u *userRepo) InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subGenre string) error {
+
+// }

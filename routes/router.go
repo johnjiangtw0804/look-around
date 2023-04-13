@@ -29,7 +29,7 @@ func Register(
 	userHandler := NewUserHandler(logger, userRepo, api.NewMapUtilities(env.GOOGLE_MAP_API_KEY), api.NewEventsSearcher(env.TICKET_MASTER_API_KEY))
 
 	authRouters.GET("/api/user/events", userHandler.listEvents)
-	authRouters.POST("/api/user/events/:id/like", userHandler.likeEvent)
-	authRouters.POST("/api/user/events/:id/dislike", userHandler.dislikeEvent)
+	authRouters.POST("/api/user/events/like", userHandler.likeEvent)
+	authRouters.POST("/api/user/events/dislike", userHandler.dislikeEvent)
 	return router
 }
