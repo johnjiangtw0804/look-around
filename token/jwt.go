@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	jwt "github.com/dgrijalva/jwt-go/v4"
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
 var (
@@ -15,7 +15,7 @@ var (
 
 var (
 	jwtkey        = []byte("JonathanJoyceAreCool")
-	signingMethod = jwt.SigningMethodRS512
+	signingMethod = jwt.SigningMethodHS256
 )
 
 type Claims struct {
@@ -24,11 +24,11 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-func GenJWT(userID string, username string, expiryTime float64) (string, error) {
+func GenJWT(userID string, username string, expiryTime int64) (string, error) {
 	claims := Claims{
 		UserID:         userID,
 		Username:       username,
-		StandardClaims: jwt.StandardClaims{ExpiresAt: jwt.NewTime(expiryTime)},
+		StandardClaims: jwt.StandardClaims{ExpiresAt: expiryTime},
 	}
 	return jwt.NewWithClaims(signingMethod, claims).SignedString(jwtkey)
 }

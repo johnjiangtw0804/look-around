@@ -65,7 +65,7 @@ func (a *authHandler) login(ctx *gin.Context) {
 	signedToken, err := token.GenJWT(
 		user.ID.String(),
 		user.UserName,
-		(float64)(time.Now().Add(jwtExpPeriod).Unix()))
+		time.Now().Add(jwtExpPeriod).Unix())
 	if err != nil {
 		a.logger.Error("failed to sign jwt", zap.String("user", req.Username), zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "token generation failed"})
