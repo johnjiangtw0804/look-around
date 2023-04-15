@@ -4,6 +4,7 @@ import (
 	api "look-around/external/api"
 	"look-around/repository"
 	"look-around/routes/entity"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -104,15 +105,45 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 	ctx.JSON(200, listEventsResp{Events: events})
 }
 
-func (u *userHandler) likeEvent(ctx *gin.Context) {
-	// userID := ctx.Param("user_id")
-	// genre := ctx.PostForm("genre")
-	// subGenre := ctx.PostForm("sub_genre")
+type likeReq struct {
+	Genre    string `json:"genre" binding:"required"`
+	SubGenre string `json:"subgenre" binding:"required"`
+}
 
+type dislikeReq struct {
+	Genre    string `json:"genre" binding:"required"`
+	SubGenre string `json:"subgenre" binding:"required"`
+}
+
+func (u *userHandler) likeEvent(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+	req := &likeReq{}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		u.logger.Warn("Warn: invalid request body")
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	genre := req.Genre
+	subgenre := req.SubGenre
+	u.userRepo.InsertUserLikeGenreAndSubGenre(uuid.MustParse(userID), genre, subgenre)
+
+	ctx.JSON(201, gin.H{"message": "liked event"})
 }
 
 func (u *userHandler) dislikeEvent(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+	req := &dislikeReq{}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		u.logger.Warn("Warn: invalid request body")
+		ctx.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	genre := req.Genre
+	subgenre := req.SubGenre
+	u.userRepo.InsertUserDisLikeGenreAndSubGenre(uuid.MustParse(userID), genre, subgenre)
 
+	ctx.JSON(200, gin.H{"message": "disliked event"})
 }
 
 func (u *userHandler) recommendEvents(ctx *gin.Context) {

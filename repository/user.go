@@ -17,6 +17,8 @@ type UserRepo interface {
 	InsertUser(user schema.User) error
 	SelectUserByID(id uuid.UUID) (schema.User, error)
 	SelectUserByUsername(username string) (schema.User, error)
+	InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subGenre string) error
+	InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, subGenre string) error
 }
 
 type userRepo struct {
@@ -60,6 +62,20 @@ func (u *userRepo) SelectUserByUsername(username string) (schema.User, error) {
 	return user, nil
 }
 
-// func (u *userRepo) InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subGenre string) error {
+func (u *userRepo) InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subGenre string) error {
+	u.db.DB.Select(genre, subGenre).Create(&userID)
+	if err := u.db.DB.Create(&userID).Error; err != nil {
+		return err
+	}
 
-// }
+	return nil
+}
+
+func (u *userRepo) InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, subGenre string) error {
+	u.db.DB.Select(genre, subGenre).Create(&userID)
+	if err := u.db.DB.Create(&userID).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
