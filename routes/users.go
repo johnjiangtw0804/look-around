@@ -116,7 +116,7 @@ type dislikeReq struct {
 }
 
 func (u *userHandler) likeEvent(ctx *gin.Context) {
-	userID := ctx.Param("user_id")
+	userID, _ := ctx.Get(_ctxKey_UserID)
 	req := &likeReq{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		u.logger.Warn("Warn: invalid request body")
@@ -126,13 +126,13 @@ func (u *userHandler) likeEvent(ctx *gin.Context) {
 
 	genre := req.Genre
 	subgenre := req.SubGenre
-	u.userRepo.InsertUserLikeGenreAndSubGenre(uuid.MustParse(userID), genre, subgenre)
+	u.userRepo.InsertUserLikeGenreAndSubGenre(uuid.MustParse(userID.(string)), genre, subgenre)
 
 	ctx.JSON(201, gin.H{"message": "liked event"})
 }
 
 func (u *userHandler) dislikeEvent(ctx *gin.Context) {
-	userID := ctx.Param("user_id")
+	userID, _ := ctx.Get(_ctxKey_UserID)
 	req := &dislikeReq{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		u.logger.Warn("Warn: invalid request body")
@@ -141,7 +141,7 @@ func (u *userHandler) dislikeEvent(ctx *gin.Context) {
 	}
 	genre := req.Genre
 	subgenre := req.SubGenre
-	u.userRepo.InsertUserDisLikeGenreAndSubGenre(uuid.MustParse(userID), genre, subgenre)
+	u.userRepo.InsertUserDisLikeGenreAndSubGenre(uuid.MustParse(userID.(string)), genre, subgenre)
 
 	ctx.JSON(200, gin.H{"message": "disliked event"})
 }

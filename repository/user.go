@@ -17,8 +17,8 @@ type UserRepo interface {
 	InsertUser(user schema.User) error
 	SelectUserByID(id uuid.UUID) (schema.User, error)
 	SelectUserByUsername(username string) (schema.User, error)
-	InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subGenre string) error
-	InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, subGenre string) error
+	InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error
+	InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error
 }
 
 type userRepo struct {
@@ -62,18 +62,26 @@ func (u *userRepo) SelectUserByUsername(username string) (schema.User, error) {
 	return user, nil
 }
 
-func (u *userRepo) InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subGenre string) error {
-	u.db.DB.Select(genre, subGenre).Create(&userID)
-	if err := u.db.DB.Create(&userID).Error; err != nil {
+func (u *userRepo) InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error {
+	userLikeGenre := schema.UserLikeGenre{
+		UserID:   userID,
+		Genre:    genre,
+		SubGenre: subgenre,
+	}
+	if err := u.db.DB.Create(&userLikeGenre).Error; err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (u *userRepo) InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, subGenre string) error {
-	u.db.DB.Select(genre, subGenre).Create(&userID)
-	if err := u.db.DB.Create(&userID).Error; err != nil {
+func (u *userRepo) InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error {
+	userDisLikeGenre := schema.UserDislikeGenre{
+		UserID:   userID,
+		Genre:    genre,
+		SubGenre: subgenre,
+	}
+	if err := u.db.DB.Create(&userDisLikeGenre).Error; err != nil {
 		return err
 	}
 
