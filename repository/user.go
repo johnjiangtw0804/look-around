@@ -19,6 +19,8 @@ type UserRepo interface {
 	SelectUserByUsername(username string) (schema.User, error)
 	InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error
 	InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error
+	SelectUserLikedGenresAndSubGenre(userID uuid.UUID) ([]schema.UserLikeGenreAndSubGenre, error)
+	SelectUserDisLikedGenreAndSubGenre(userID uuid.UUID) ([]schema.UserDisLikeGenreAndSubGenre, error)
 }
 
 type userRepo struct {
@@ -63,7 +65,7 @@ func (u *userRepo) SelectUserByUsername(username string) (schema.User, error) {
 }
 
 func (u *userRepo) InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error {
-	userLikeGenre := schema.UserLikeGenre{
+	userLikeGenre := schema.UserLikeGenreAndSubGenre{
 		UserID:   userID,
 		Genre:    genre,
 		SubGenre: subgenre,
@@ -76,7 +78,7 @@ func (u *userRepo) InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subge
 }
 
 func (u *userRepo) InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error {
-	userDisLikeGenre := schema.UserDislikeGenre{
+	userDisLikeGenre := schema.UserDisLikeGenreAndSubGenre{
 		UserID:   userID,
 		Genre:    genre,
 		SubGenre: subgenre,
@@ -86,4 +88,20 @@ func (u *userRepo) InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, su
 	}
 
 	return nil
+}
+
+func (u *userRepo) SelectUserLikedGenresAndSubGenre(userID uuid.UUID) ([]schema.UserLikeGenreAndSubGenre, error) {
+	var userLikedGenres []schema.UserLikeGenreAndSubGenre
+	if err := u.db.DB.Model(&schema.UserLikeGenreAndSubGenre{}).Where("user_id = ?", userID).Find(&userLikedGenres).Error; err != nil {
+		return userLikedGenres, err
+	}
+	return userLikedGenres, nil
+}
+
+func (u *userRepo) SelectUserDisLikedGenreAndSubGenre(userID uuid.UUID) ([]schema.UserDisLikeGenreAndSubGenre, error) {
+	var userDisLikedGenres []schema.UserDisLikeGenreAndSubGenre
+	if err := u.db.DB.Model(&schema.UserDisLikeGenreAndSubGenre{}).Where("user_id = ?", userID).Find(&userDisLikedGenres).Error; err != nil {
+		return userDisLikedGenres, err
+	}
+	return userDisLikedGenres, nil
 }

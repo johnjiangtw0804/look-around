@@ -45,7 +45,7 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 	user, err := u.userRepo.SelectUserByID(uuid.MustParse(userID.(string)))
 	if err != nil {
 		u.logger.Error("failed to get user", zap.Error(err))
-		ctx.JSON(500, gin.H{"error": "failed to get user"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user"})
 		return
 	}
 
@@ -53,14 +53,14 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 	lat, long, err := u.mapUtilities.GetLatLong(user.Address)
 	if err != nil {
 		u.logger.Error("failed to get lat long", zap.Error(err))
-		ctx.JSON(500, gin.H{"error": "failed to get lat long"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get lat long"})
 		return
 	}
 
 	resp, err := u.eventSearcher.ListEvents(lat, long, 0, "")
 	if err != nil {
 		u.logger.Error("failed to get events", zap.Error(err))
-		ctx.JSON(500, gin.H{"error": "failed to get events"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get events"})
 		return
 	}
 
@@ -102,7 +102,7 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 	for i := range events {
 		events[i].Distance, _ = u.mapUtilities.CalculateDistance(lat, long, events[i].Latitude, events[i].Longitude)
 	}
-	ctx.JSON(200, listEventsResp{Events: events})
+	ctx.JSON(http.StatusOK, listEventsResp{Events: events})
 }
 
 type likeReq struct {
@@ -119,7 +119,7 @@ func (u *userHandler) likeEvent(ctx *gin.Context) {
 	userID, _ := ctx.Get(_ctxKey_UserID)
 	req := &likeReq{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		u.logger.Warn("Warn: invalid request body")
+		u.logger.Warn("invalid request body")
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -128,14 +128,14 @@ func (u *userHandler) likeEvent(ctx *gin.Context) {
 	subgenre := req.SubGenre
 	u.userRepo.InsertUserLikeGenreAndSubGenre(uuid.MustParse(userID.(string)), genre, subgenre)
 
-	ctx.JSON(201, gin.H{"message": "liked event"})
+	ctx.JSON(http.StatusCreated, gin.H{"message": "liked event"})
 }
 
 func (u *userHandler) dislikeEvent(ctx *gin.Context) {
 	userID, _ := ctx.Get(_ctxKey_UserID)
 	req := &dislikeReq{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		u.logger.Warn("Warn: invalid request body")
+		u.logger.Warn("invalid request body")
 		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -143,9 +143,125 @@ func (u *userHandler) dislikeEvent(ctx *gin.Context) {
 	subgenre := req.SubGenre
 	u.userRepo.InsertUserDisLikeGenreAndSubGenre(uuid.MustParse(userID.(string)), genre, subgenre)
 
-	ctx.JSON(200, gin.H{"message": "disliked event"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "disliked event"})
 }
 
 func (u *userHandler) recommendEvents(ctx *gin.Context) {
+	userID, _ := ctx.Get(_ctxKey_UserID)
+	user, err := u.userRepo.SelectUserByID(uuid.MustParse(userID.(string)))
+	if err != nil {
+		u.logger.Error("failed to get user", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user"})
+		return
+	}
+	likedGenreAndSubgenre, err := u.userRepo.SelectUserLikedGenresAndSubGenre(uuid.MustParse(userID.(string)))
+	if err != nil {
+		u.logger.Warn("failed to get liked genres", zap.Error(err))
+		ctx.JSON(http.StatusOK, gin.H{"Warn": "failed to get disliked genres. No recommendations will be made"})
+		return
+	}
+	dislikedGenreAndSubgenre, err := u.userRepo.SelectUserDisLikedGenreAndSubGenre(uuid.MustParse(userID.(string)))
+	if err != nil {
+		u.logger.Warn("failed to get disliked genres", zap.Error(err))
+		ctx.JSON(http.StatusOK, gin.H{"Warn": "failed to get disliked genres. No recommendations will be made"})
+		return
+	}
+	likedGenreToCount := make(map[string]int)
+	likedSubGenreToCount := make(map[string]int)
 
+	var mostLikedGenre, mostLikedSubGenre string
+	var mostLikedGenreCount, mostLikedSubGenreCount int
+	for _, genre := range likedGenreAndSubgenre {
+		likedGenreToCount[genre.Genre]++
+		likedSubGenreToCount[genre.SubGenre]++
+		if likedGenreToCount[genre.Genre] > mostLikedGenreCount {
+			mostLikedGenre = genre.Genre
+			mostLikedGenreCount = likedGenreToCount[genre.Genre]
+		}
+		if likedSubGenreToCount[genre.SubGenre] > mostLikedSubGenreCount {
+			mostLikedSubGenre = genre.SubGenre
+			mostLikedSubGenreCount = likedSubGenreToCount[genre.SubGenre]
+		}
+	}
+	u.logger.Info("most liked genre", zap.String("genre", mostLikedGenre))
+	dislikedGenreToCount := make(map[string]int)
+	dislikedSubGenreToCount := make(map[string]int)
+
+	var mostDislikedGenre, mostDislikedSubGenre string
+	var mostDislikedGenreCount, mostDislikedSubGenreCount int
+	for _, genre := range dislikedGenreAndSubgenre {
+		dislikedGenreToCount[genre.Genre]++
+		dislikedSubGenreToCount[genre.SubGenre]++
+		if dislikedGenreToCount[genre.Genre] > mostDislikedGenreCount {
+			mostDislikedGenre = genre.Genre
+			mostDislikedGenreCount = dislikedGenreToCount[genre.Genre]
+		}
+		if dislikedSubGenreToCount[genre.SubGenre] > mostDislikedSubGenreCount {
+			mostDislikedSubGenre = genre.SubGenre
+			mostDislikedSubGenreCount = dislikedSubGenreToCount[genre.SubGenre]
+		}
+	}
+	u.logger.Info("most disliked genre", zap.String("genre", mostDislikedGenre))
+
+	// search with keyword equals to most liked genre or subgenre
+
+	// get users lat long
+	lat, long, err := u.mapUtilities.GetLatLong(user.Address)
+	if err != nil {
+		u.logger.Error("failed to get lat long", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get lat long"})
+		return
+	}
+
+	resp, err := u.eventSearcher.ListEvents(lat, long, 0, mostLikedSubGenre)
+	if err != nil {
+		u.logger.Error("failed to get events", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get events"})
+		return
+	}
+	u.logger.Info("events", zap.Any("events number", len(resp.Embedded.Events)))
+
+	// compose responses
+	eventsToOccur := make(map[*entity.Event]int)
+	events := make([]entity.Event, 0)
+	for _, event := range resp.Embedded.Events {
+		// filter out events that are disliked
+		if event.Classifications[0].Genre.Name == mostDislikedGenre || event.Classifications[0].SubGenre.Name == mostDislikedSubGenre {
+			continue
+		}
+		var imageURL string
+		if len(event.Images) > 0 {
+			imageURL = event.Images[0].URL
+		}
+		long, _ := strconv.ParseFloat(event.EmbeddedVenues.Venues[0].Location.Longitude, 64)
+		lat, _ := strconv.ParseFloat(event.EmbeddedVenues.Venues[0].Location.Latitude, 64)
+		event := entity.Event{
+			ID:   event.ID,
+			Name: event.Name,
+			Date: entity.Date{
+				LocalDate: event.Dates.Start.LocalDate,
+				LocalTime: event.Dates.Start.LocalTime,
+				Timezone:  event.Dates.Timezone,
+				Status:    event.Dates.Status.Code,
+			},
+			Address: event.EmbeddedVenues.Venues[0].Address.Line1 + ", " + event.
+				EmbeddedVenues.Venues[0].City.Name + ", " +
+				event.EmbeddedVenues.Venues[0].State.Name + ", " + event.EmbeddedVenues.Venues[0].Country.Name,
+			Genres:    []string{event.Classifications[0].Genre.Name, event.Classifications[0].SubGenre.Name},
+			ImageURL:  imageURL,
+			URL:       event.URL,
+			Longitude: long,
+			Latitude:  lat,
+		}
+
+		// remove duplicates
+		if _, ok := eventsToOccur[&event]; !ok {
+			events = append(events, event)
+		}
+	}
+	// calculate distance
+	for i := range events {
+		events[i].Distance, _ = u.mapUtilities.CalculateDistance(lat, long, events[i].Latitude, events[i].Longitude)
+	}
+	ctx.JSON(http.StatusOK, listEventsResp{Events: events})
 }

@@ -31,5 +31,6 @@ func Register(
 	authRouters.GET("/api/user/events", userHandler.listEvents)
 	authRouters.POST("/api/user/events/like", userHandler.likeEvent)
 	authRouters.POST("/api/user/events/dislike", userHandler.dislikeEvent)
+	authRouters.GET("/api/user/events/recommend", userHandler.recommendEvents)
 	return router
 }

@@ -108,13 +108,12 @@ func (t *ticketMasterEventsSearcher) ListEvents(latitude, longitude float64, rad
 	}
 	client := &http.Client{}
 	// function performs URL encoding in UTF-8, so we don't need to specify the encoding type explicitly.
-	encodedKeyword := url.QueryEscape(keyword)
 	geoHash := geohash.Encode(latitude, longitude, 8)
 
 	payload := url.Values{}
 	payload.Add("apikey", t.apiKey)
 	payload.Add("geoPoint", geoHash)
-	payload.Add("keyword", encodedKeyword)
+	payload.Add("keyword", keyword)
 	payload.Add("unit", discoveryDEFAULT_UNIT)
 	payload.Add("radius", fmt.Sprintf("%d", radius))
 	req, err := http.NewRequest(http.MethodGet, discoveryURL+"?"+payload.Encode(), nil)
