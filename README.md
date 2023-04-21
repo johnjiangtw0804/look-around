@@ -3,7 +3,7 @@ This project aims to create a recommendation system that displays events to user
 
 For each item purchased from their purchase history, customers can choose the option to use or not use the item for recommendations.
 
-The technologies used: Golang, MySQL, and JavaScript.
+The technologies used: Golang, Postgres, and JavaScript.
 
 Contributor: Jonathan Joyce
 
