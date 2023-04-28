@@ -21,7 +21,6 @@ type UserHandler interface {
 
 func NewUserHandler(logger *zap.Logger, repo repository.UserRepo, mapUtil api.MapUtilities, eventSearcher api.EventsSearcher) UserHandler {
 	return &userHandler{
-
 		logger:        logger,
 		userRepo:      repo,
 		mapUtilities:  mapUtil,
@@ -41,22 +40,10 @@ type listEventsResp struct {
 }
 
 func (u *userHandler) listEvents(ctx *gin.Context) {
-	userID, _ := ctx.Get(_ctxKey_UserID)
-	user, err := u.userRepo.SelectUserByID(uuid.MustParse(userID.(string)))
-	if err != nil {
-		u.logger.Error("failed to get user", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user"})
-		return
-	}
-
-	// get users lat long
-	lat, long, err := u.mapUtilities.GetLatLong(user.Address)
-	if err != nil {
-		u.logger.Error("failed to get lat long", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get lat long"})
-		return
-	}
-
+	latString := ctx.Query("lat")
+	longString := ctx.Query("long")
+	lat, _ := strconv.ParseFloat(latString, 64)
+	long, _ := strconv.ParseFloat(longString, 64)
 	resp, err := u.eventSearcher.ListEvents(lat, long, 0, "")
 	if err != nil {
 		u.logger.Error("failed to get events", zap.Error(err))
@@ -108,6 +95,7 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 type likeReq struct {
 	Genre    string `json:"genre" binding:"required"`
 	SubGenre string `json:"subgenre" binding:"required"`
+	Lat      string `json:"lat" binding:"required"`
 }
 
 type dislikeReq struct {
@@ -148,12 +136,6 @@ func (u *userHandler) dislikeEvent(ctx *gin.Context) {
 
 func (u *userHandler) recommendEvents(ctx *gin.Context) {
 	userID, _ := ctx.Get(_ctxKey_UserID)
-	user, err := u.userRepo.SelectUserByID(uuid.MustParse(userID.(string)))
-	if err != nil {
-		u.logger.Error("failed to get user", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user"})
-		return
-	}
 	likedGenreAndSubgenre, err := u.userRepo.SelectUserLikedGenresAndSubGenre(uuid.MustParse(userID.(string)))
 	if err != nil {
 		u.logger.Warn("failed to get liked genres", zap.Error(err))
@@ -205,8 +187,11 @@ func (u *userHandler) recommendEvents(ctx *gin.Context) {
 
 	// search with keyword equals to most liked genre or subgenre
 
-	// get users lat long
-	lat, long, err := u.mapUtilities.GetLatLong(user.Address)
+	latString := ctx.Query("lat")
+	longString := ctx.Query("long")
+	lat, _ := strconv.ParseFloat(latString, 64)
+	long, _ := strconv.ParseFloat(longString, 64)
+
 	if err != nil {
 		u.logger.Error("failed to get lat long", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get lat long"})
