@@ -5,6 +5,7 @@ import (
 	api "look-around/external/api"
 	"look-around/repository"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -15,6 +16,11 @@ func Register(
 	db *repository.GormDatabase,
 	env *envconfig.Env,
 ) *gin.Engine {
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	router.Use(cors.New(config))
+
 	// Create Repo instances
 	userRepo := repository.NewUserRepo(db)
 

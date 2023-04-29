@@ -41,9 +41,20 @@ type listEventsResp struct {
 
 func (u *userHandler) listEvents(ctx *gin.Context) {
 	latString := ctx.Query("lat")
+	if latString == "" {
+		u.logger.Warn("lat is required")
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "lat is required"})
+		return
+	}
 	longString := ctx.Query("long")
+	if longString == "" {
+		u.logger.Warn("long is required")
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "long is required"})
+		return
+	}
 	lat, _ := strconv.ParseFloat(latString, 64)
 	long, _ := strconv.ParseFloat(longString, 64)
+	u.logger.Info("list events", zap.Float64("lat", lat), zap.Float64("long", long))
 	resp, err := u.eventSearcher.ListEvents(lat, long, 0, "")
 	if err != nil {
 		u.logger.Error("failed to get events", zap.Error(err))
