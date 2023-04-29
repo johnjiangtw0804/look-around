@@ -14,7 +14,7 @@ const (
 )
 
 type MapUtilities interface {
-	GetLatLong(address string) (float64, float64, error)
+	// GetLatLong(address string) (float64, float64, error)
 	CalculateDistance(lat1, long1, lat2, long2 float64) (int, error)
 }
 
@@ -30,39 +30,39 @@ type googleMapUtilities struct {
 
 // address format should be "street, city, state"
 // Make a request to the Google Maps Geocoding API to get the latitude and longitude coordinates for the address
-func (g *googleMapUtilities) GetLatLong(address string) (float64, float64, error) {
-	client := &http.Client{}
-	encodedAddress := url.QueryEscape(address)
-	response, err := client.Get(latLongURL + "?address=" + encodedAddress + "&key=" + g.apiKey)
-	if err != nil {
-		return 0, 0, err
-	}
+// func (g *googleMapUtilities) GetLatLong(address string) (float64, float64, error) {
+// 	client := &http.Client{}
+// 	encodedAddress := url.QueryEscape(address)
+// 	response, err := client.Get(latLongURL + "?address=" + encodedAddress + "&key=" + g.apiKey)
+// 	if err != nil {
+// 		return 0, 0, err
+// 	}
 
-	data, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return 0, 0, err
-	}
-	var geocodingResponse struct {
-		Results []struct {
-			Geometry struct {
-				Location struct {
-					Lat float64 `json:"lat"`
-					Lng float64 `json:"lng"`
-				} `json:"location"`
-			} `json:"geometry"`
-		} `json:"results"`
-	}
-	err = json.Unmarshal(data, &geocodingResponse)
-	if err != nil {
-		return 0, 0, err
-	}
-	if len(geocodingResponse.Results) == 0 {
-		return 0, 0, fmt.Errorf("no results found for address %s", address)
-	}
+// 	data, err := ioutil.ReadAll(response.Body)
+// 	if err != nil {
+// 		return 0, 0, err
+// 	}
+// 	var geocodingResponse struct {
+// 		Results []struct {
+// 			Geometry struct {
+// 				Location struct {
+// 					Lat float64 `json:"lat"`
+// 					Lng float64 `json:"lng"`
+// 				} `json:"location"`
+// 			} `json:"geometry"`
+// 		} `json:"results"`
+// 	}
+// 	err = json.Unmarshal(data, &geocodingResponse)
+// 	if err != nil {
+// 		return 0, 0, err
+// 	}
+// 	if len(geocodingResponse.Results) == 0 {
+// 		return 0, 0, fmt.Errorf("no results found for address %s", address)
+// 	}
 
-	// Return the latitude and longitude coordinates for the address
-	return geocodingResponse.Results[0].Geometry.Location.Lat, geocodingResponse.Results[0].Geometry.Location.Lng, nil
-}
+// 	// Return the latitude and longitude coordinates for the address
+// 	return geocodingResponse.Results[0].Geometry.Location.Lat, geocodingResponse.Results[0].Geometry.Location.Lng, nil
+// }
 
 // Make a request to the Google Maps Distance Matrix API to get the distance between two locations in meters
 func (g *googleMapUtilities) CalculateDistance(lat1, long1, lat2, long2 float64) (int, error) {

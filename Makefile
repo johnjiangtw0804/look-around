@@ -43,5 +43,3 @@ install-prerequisites:
 run:
 	@echo "install ... "
 	@go run main.go
-
-
