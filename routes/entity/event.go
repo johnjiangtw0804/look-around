@@ -2,7 +2,7 @@ package entity
 
 // Event represents a business returned by the events searching API.
 type Event struct {
-	ID        string   `json:"id"`
+	ID        string   `json:"item_id"`
 	Name      string   `json:"name"`
 	Date      Date     `json:"date"`
 	Address   string   `json:"address"`
