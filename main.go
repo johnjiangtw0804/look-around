@@ -39,7 +39,7 @@ func main() {
 
 	server := routes.Register(gin.Default(), logger, db, &env)
 	go func() {
-		server.Run(":8080")
+		server.Run(":5500")
 	}()
 	logger.Info("Server started")
 

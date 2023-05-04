@@ -56,12 +56,11 @@ func ParseJWT(tokenStr string) (*Claims, error) {
 	return claims, nil
 }
 
-// TODO: MIGHT USE IT LATER
-// func RefreshJWT(tokenStr string, expiryTime float64) (string, error) {
-// 	claims, err := ParseJWT(tokenStr)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	claims.ExpiresAt = jwt.NewTime(expiryTime)
-// 	return jwt.NewWithClaims(signingMethod, claims).SignedString(jwtkey)
-// }
+func RefreshJWT(tokenStr string, expiryTime int64) (string, error) {
+	claims, err := ParseJWT(tokenStr)
+	if err != nil {
+		return "", err
+	}
+	claims.ExpiresAt = expiryTime
+	return jwt.NewWithClaims(signingMethod, claims).SignedString(jwtkey)
+}

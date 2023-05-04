@@ -25,18 +25,19 @@ func Register(
 	userRepo := repository.NewUserRepo(db)
 
 	// Register handlers for no authentication API
-	authHandler := NewAuthHandler(logger, userRepo)
+	// authHandler := NewAuthHandler(logger, userRepo)
 	noAuthRouters := router.Group("")
-	noAuthRouters.POST("/api/auth/register", authHandler.register)
-	noAuthRouters.POST("/api/auth/login", authHandler.login)
+	// noAuthRouters.POST("/api/auth/register", authHandler.register)
+	// noAuthRouters.POST("/api/auth/login", authHandler.login)
+	// noAuthRouters.POST("/api/auth/refresh", authHandler.refresh)
 
-	authRouters := router.Group("", authenticate(userRepo, logger))
+	// authRouters := router.Group("", authenticate(userRepo, logger))
 	// router group to add middle ware for authentication
 	userHandler := NewUserHandler(logger, userRepo, api.NewMapUtilities(env.GOOGLE_MAP_API_KEY), api.NewEventsSearcher(env.TICKET_MASTER_API_KEY))
 
-	authRouters.GET("/api/user/events", userHandler.listEvents)
-	authRouters.POST("/api/user/events/like", userHandler.likeEvent)
-	authRouters.POST("/api/user/events/dislike", userHandler.dislikeEvent)
-	authRouters.GET("/api/user/events/recommend", userHandler.recommendEvents)
+	noAuthRouters.GET("/api/user/events", userHandler.listEvents)
+	noAuthRouters.POST("/api/user/events/like", userHandler.likeEvent)
+	noAuthRouters.POST("/api/user/events/dislike", userHandler.dislikeEvent)
+	noAuthRouters.GET("/api/user/events/recommend", userHandler.recommendEvents)
 	return router
 }
