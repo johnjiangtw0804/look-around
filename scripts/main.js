@@ -23,15 +23,15 @@
     }
 
     function initGeoLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(onPositionUpdated,
-                onLoadPositionFailed, {
-                    maximumAge: 60000
-                });
+        // if (navigator.geolocation) {
+        //     navigator.geolocation.getCurrentPosition(onPositionUpdated,
+        //         onLoadPositionFailed, {
+        //             maximumAge: 60000
+        //         });
             showLoadingMessage('Retrieving your location...');
-        } else {
-            onLoadPositionFailed();
-        }
+        // } else {
+            getLocationFromIP();
+        // }
     }
 
     function onPositionUpdated(position) {
@@ -41,10 +41,10 @@
         loadNearbyItems();
     }
 
-    function onLoadPositionFailed() {
-        console.warn('navigator.geolocation is not available');
-        getLocationFromIP();
-    }
+    // function onLoadPositionFailed() {
+    //     console.warn('navigator.geolocation is not available');
+    //     getLocationFromIP();
+    // }
 
     function getLocationFromIP() {
         // Get location from http://ipinfo.io/json
@@ -59,6 +59,7 @@
             } else {
                 console.warn('Getting location by IP failed.');
             }
+            console.log("loading nearby items");
             loadNearbyItems();
         });
     }
@@ -69,7 +70,7 @@
 
     /**
      * A helper function that makes a navigation button active
-     * 
+     *
      * @param btnId -
      *            The id of the navigation button
      */
@@ -106,7 +107,7 @@
 
     /**
      * A helper function that creates a DOM element <tag options...>
-     * 
+     *
      * @param tag
      * @param options
      * @returns
@@ -138,7 +139,7 @@
 
     /**
      * AJAX helper
-     * 
+     *
      * @param method -
      *            GET|POST|PUT|DELETE
      * @param url -
@@ -198,12 +199,19 @@
         // make AJAX call
         ajax('GET', url + '?' + params, req,
             // successful callback
-            function(res) {
+            function (res) {
                 var items = JSON.parse(res);
                 if (!items || items.length === 0) {
                     showWarningMessage('No nearby item.');
                 } else {
-                    listItems(items);
+                    console.log(items);
+                    var itemList = $('item-list');
+                    itemList.innerHTML = '';
+                    for (var i = 0; i < items.events.length; i++) {
+                        console.log("This is event " + i);
+                        console.log(items.events[i]);
+                        addItem(itemList, items.events[i]);
+                    }
                 }
             },
             // failed callback
@@ -316,7 +324,7 @@
 
     /**
      * List items
-     * 
+     *
      * @param items -
      *            An array of item JSON objects
      */
@@ -332,7 +340,7 @@
 
     /**
      * Add item to the list
-     * 
+     *
      * @param itemList -
      *            The
      *            <ul id="item-list">
@@ -351,8 +359,6 @@
 
         // set the data attribute
         li.dataset.item_id = item_id;
-        li.dataset.favorite = item.favorite;
-
         // item image
         if (item.image_url) {
             li.appendChild($('img', {
@@ -380,7 +386,7 @@
         var category = $('p', {
             className: 'item-category'
         });
-        category.innerHTML = 'Category: ' + item.categories.join(', ');
+        category.innerHTML = 'Category: ' + item.genres.join(', ');
         section.appendChild(category);
 
         // TODO(vincent). here we might have a problem showing 3.5 as 3.
@@ -389,17 +395,11 @@
             className: 'stars'
         });
 
-        for (var i = 0; i < item.rating; i++) {
+        for (var i = 0; i < 3; i++) {
             var star = $('i', {
                 className: 'fa fa-star'
             });
             stars.appendChild(star);
-        }
-
-        if (('' + item.rating).match(/\.5$/)) {
-            stars.appendChild($('i', {
-                className: 'fa fa-star-half-o'
-            }));
         }
 
         section.appendChild(stars);
@@ -408,7 +408,7 @@
 
         // address
         var address = $('p', {
-            className: 'item-address'
+            className: 'address'
         });
 
         address.innerHTML = item.address.replace(/,/g, '<br/>').replace(/\"/g,
@@ -420,20 +420,19 @@
             className: 'fav-link'
         });
 
-        favLink.onclick = function() {
-            changeFavoriteItem(item_id);
-        };
+        // favLink.onclick = function() {
+        //     changeFavoriteItem(item_id);
+        // };
 
-        favLink.appendChild($('i', {
-            id: 'fav-icon-' + item_id,
-            className: item.favorite ? 'fa fa-heart' : 'fa fa-heart-o'
-        }));
+        // favLink.appendChild($('i', {
+        //     id: 'fav-icon-' + item_id,
+        //     className: item.favorite ? 'fa fa-heart' : 'fa fa-heart-o'
+        // }));
 
         li.appendChild(favLink);
 
         itemList.appendChild(li);
     }
 
-    init();
-
+        init();
 })();
