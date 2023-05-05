@@ -13,12 +13,12 @@ DATABASE_URL ?= sslmode=disable host=${DB_HOST} port=${DB_PORT} user=${DB_USER} 
 #
 # Ticket master API key
 #
-TICKET_MASTER_API_KEY ?= XXXX
+TICKET_MASTER_API_KEY ?= XXX
 
 #
 # Google Map API key
 #
-GOOGLE_MAP_API_KEY ?= XXXX
+GOOGLE_MAP_API_KEY ?= XXX
 
 #
 # postgres

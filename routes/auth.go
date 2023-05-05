@@ -20,6 +20,7 @@ import (
 type AuthHandler interface {
 	login(ctx *gin.Context)
 	register(ctx *gin.Context)
+	refresh(ctx *gin.Context)
 }
 
 type authHandler struct {
@@ -35,7 +36,9 @@ func NewAuthHandler(logger *zap.Logger, repo repo.UserRepo) AuthHandler {
 }
 
 const _ctxKey_UserID = "userID"
+const _ctxKey_JWT = "jwt"
 const jwtExpPeriod = 7 * 24 * time.Hour
+const authorizationHeaderField = "Authorization"
 
 type loginReq struct {
 	Username string `json:"username" binding:"required"`
@@ -73,7 +76,8 @@ func (a *authHandler) login(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"token": signedToken,
+		"token":    signedToken,
+		"username": user.UserName,
 	})
 }
 
@@ -122,8 +126,23 @@ func (a *authHandler) register(ctx *gin.Context) {
 	}
 }
 
+func (a *authHandler) refresh(ctx *gin.Context) {
+	jwt, _ := ctx.Get(_ctxKey_JWT) // the token is validated by middleware
+	jwtStr, _ := jwt.(string)      // type assertion should be safe, TODO: need relevent tests added in middleware
+	newToken, err := token.RefreshJWT(jwtStr, time.Now().Add(jwtExpPeriod).Unix())
+	if err != nil {
+		user, _ := ctx.Get(_ctxKey_UserID)
+		userUUID, _ := user.(uuid.UUID)
+		a.logger.Warn("invalid user", zap.String("user", userUUID.String()), zap.Error(err))
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "token generation failed"})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"token": newToken,
+	})
+}
+
 func authenticate(repo repo.UserRepo, logger *zap.Logger) gin.HandlerFunc {
-	authorizationHeaderField := "Authorization"
 	return func(ctx *gin.Context) {
 		auth := ctx.Request.Header.Get(authorizationHeaderField)
 		prefix := "Bearer "
