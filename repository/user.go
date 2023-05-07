@@ -17,10 +17,10 @@ type UserRepo interface {
 	InsertUser(user schema.User) error
 	SelectUserByID(id uuid.UUID) (schema.User, error)
 	SelectUserByUsername(username string) (schema.User, error)
-	InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error
-	InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error
-	SelectUserLikedGenresAndSubGenre(userID uuid.UUID) ([]schema.UserLikeGenreAndSubGenre, error)
-	SelectUserDisLikedGenreAndSubGenre(userID uuid.UUID) ([]schema.UserDisLikeGenreAndSubGenre, error)
+	InsertUserLikeGenreAndSubGenre(userID string, genre, subgenre string) error
+	InsertUserDisLikeGenreAndSubGenre(userID string, genre, subgenre string) error
+	SelectUserLikedGenresAndSubGenre(userID string) ([]schema.UserLikeGenreAndSubGenre, error)
+	SelectUserDisLikedGenreAndSubGenre(userID string) ([]schema.UserDisLikeGenreAndSubGenre, error)
 }
 
 type userRepo struct {
@@ -64,7 +64,7 @@ func (u *userRepo) SelectUserByUsername(username string) (schema.User, error) {
 	return user, nil
 }
 
-func (u *userRepo) InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error {
+func (u *userRepo) InsertUserLikeGenreAndSubGenre(userID string, genre, subgenre string) error {
 	userLikeGenre := schema.UserLikeGenreAndSubGenre{
 		UserID:   userID,
 		Genre:    genre,
@@ -77,7 +77,7 @@ func (u *userRepo) InsertUserLikeGenreAndSubGenre(userID uuid.UUID, genre, subge
 	return nil
 }
 
-func (u *userRepo) InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, subgenre string) error {
+func (u *userRepo) InsertUserDisLikeGenreAndSubGenre(userID string, genre, subgenre string) error {
 	userDisLikeGenre := schema.UserDisLikeGenreAndSubGenre{
 		UserID:   userID,
 		Genre:    genre,
@@ -90,7 +90,7 @@ func (u *userRepo) InsertUserDisLikeGenreAndSubGenre(userID uuid.UUID, genre, su
 	return nil
 }
 
-func (u *userRepo) SelectUserLikedGenresAndSubGenre(userID uuid.UUID) ([]schema.UserLikeGenreAndSubGenre, error) {
+func (u *userRepo) SelectUserLikedGenresAndSubGenre(userID string) ([]schema.UserLikeGenreAndSubGenre, error) {
 	var userLikedGenres []schema.UserLikeGenreAndSubGenre
 	if err := u.db.DB.Model(&schema.UserLikeGenreAndSubGenre{}).Where("user_id = ?", userID).Find(&userLikedGenres).Error; err != nil {
 		return userLikedGenres, err
@@ -98,7 +98,7 @@ func (u *userRepo) SelectUserLikedGenresAndSubGenre(userID uuid.UUID) ([]schema.
 	return userLikedGenres, nil
 }
 
-func (u *userRepo) SelectUserDisLikedGenreAndSubGenre(userID uuid.UUID) ([]schema.UserDisLikeGenreAndSubGenre, error) {
+func (u *userRepo) SelectUserDisLikedGenreAndSubGenre(userID string) ([]schema.UserDisLikeGenreAndSubGenre, error) {
 	var userDisLikedGenres []schema.UserDisLikeGenreAndSubGenre
 	if err := u.db.DB.Model(&schema.UserDisLikeGenreAndSubGenre{}).Where("user_id = ?", userID).Find(&userDisLikedGenres).Error; err != nil {
 		return userDisLikedGenres, err

@@ -5,10 +5,10 @@ import (
 	"look-around/repository"
 	"look-around/routes/entity"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -55,7 +55,7 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 	lat, _ := strconv.ParseFloat(latString, 64)
 	long, _ := strconv.ParseFloat(longString, 64)
 	u.logger.Info("list events", zap.Float64("lat", lat), zap.Float64("long", long))
-	resp, err := u.eventSearcher.ListEvents(lat, long, 0, "")
+	eventsResp, err := u.eventSearcher.ListEvents(lat, long, 0, "")
 	if err != nil {
 		u.logger.Error("failed to get events", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get events"})
@@ -63,9 +63,9 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 	}
 
 	// compose responses
-	eventsToOccur := make(map[*entity.Event]int)
+	eventsToOccur := make(map[string]entity.Event)
 	events := make([]entity.Event, 0)
-	for _, event := range resp.Embedded.Events {
+	for _, event := range eventsResp.Embedded.Events {
 		var imageURL string
 		if len(event.Images) > 0 {
 			imageURL = event.Images[0].URL
@@ -92,7 +92,8 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 		}
 
 		// remove duplicates
-		if _, ok := eventsToOccur[&event]; !ok {
+		if _, ok := eventsToOccur[event.Name]; !ok {
+			eventsToOccur[event.Name] = event
 			events = append(events, event)
 		}
 	}
@@ -100,13 +101,16 @@ func (u *userHandler) listEvents(ctx *gin.Context) {
 	for i := range events {
 		events[i].Distance, _ = u.mapUtilities.CalculateDistance(lat, long, events[i].Latitude, events[i].Longitude)
 	}
+
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Distance < events[j].Distance
+	})
 	ctx.JSON(http.StatusOK, listEventsResp{Events: events})
 }
 
 type likeReq struct {
 	Genre    string `json:"genre" binding:"required"`
 	SubGenre string `json:"subgenre" binding:"required"`
-	Lat      string `json:"lat" binding:"required"`
 }
 
 type dislikeReq struct {
@@ -115,7 +119,7 @@ type dislikeReq struct {
 }
 
 func (u *userHandler) likeEvent(ctx *gin.Context) {
-	userID, _ := ctx.Get(_ctxKey_UserID)
+	userID := "1111"
 	req := &likeReq{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		u.logger.Warn("invalid request body")
@@ -125,13 +129,15 @@ func (u *userHandler) likeEvent(ctx *gin.Context) {
 
 	genre := req.Genre
 	subgenre := req.SubGenre
-	u.userRepo.InsertUserLikeGenreAndSubGenre(uuid.MustParse(userID.(string)), genre, subgenre)
+	u.userRepo.InsertUserLikeGenreAndSubGenre(userID, genre, subgenre)
 
 	ctx.JSON(http.StatusCreated, gin.H{"message": "liked event"})
 }
 
 func (u *userHandler) dislikeEvent(ctx *gin.Context) {
-	userID, _ := ctx.Get(_ctxKey_UserID)
+	// userID, _ := ctx.Get(_ctxKey_UserID)
+	userID := "1111"
+
 	req := &dislikeReq{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		u.logger.Warn("invalid request body")
@@ -140,20 +146,20 @@ func (u *userHandler) dislikeEvent(ctx *gin.Context) {
 	}
 	genre := req.Genre
 	subgenre := req.SubGenre
-	u.userRepo.InsertUserDisLikeGenreAndSubGenre(uuid.MustParse(userID.(string)), genre, subgenre)
+	u.userRepo.InsertUserDisLikeGenreAndSubGenre(userID, genre, subgenre)
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "disliked event"})
 }
 
 func (u *userHandler) recommendEvents(ctx *gin.Context) {
-	userID, _ := ctx.Get(_ctxKey_UserID)
-	likedGenreAndSubgenre, err := u.userRepo.SelectUserLikedGenresAndSubGenre(uuid.MustParse(userID.(string)))
+	userID := "1111"
+	likedGenreAndSubgenre, err := u.userRepo.SelectUserLikedGenresAndSubGenre(userID)
 	if err != nil {
 		u.logger.Warn("failed to get liked genres", zap.Error(err))
 		ctx.JSON(http.StatusOK, gin.H{"Warn": "failed to get disliked genres. No recommendations will be made"})
 		return
 	}
-	dislikedGenreAndSubgenre, err := u.userRepo.SelectUserDisLikedGenreAndSubGenre(uuid.MustParse(userID.(string)))
+	dislikedGenreAndSubgenre, err := u.userRepo.SelectUserDisLikedGenreAndSubGenre(userID)
 	if err != nil {
 		u.logger.Warn("failed to get disliked genres", zap.Error(err))
 		ctx.JSON(http.StatusOK, gin.H{"Warn": "failed to get disliked genres. No recommendations will be made"})
@@ -205,20 +211,20 @@ func (u *userHandler) recommendEvents(ctx *gin.Context) {
 
 	if err != nil {
 		u.logger.Error("failed to get lat long", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get lat long"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to get lat long"})
 		return
 	}
 
 	resp, err := u.eventSearcher.ListEvents(lat, long, 0, mostLikedSubGenre)
 	if err != nil {
 		u.logger.Error("failed to get events", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get events"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to get events"})
 		return
 	}
 	u.logger.Info("events", zap.Any("events number", len(resp.Embedded.Events)))
 
 	// compose responses
-	eventsToOccur := make(map[*entity.Event]int)
+	eventsToOccur := make(map[string]*entity.Event)
 	events := make([]entity.Event, 0)
 	for _, event := range resp.Embedded.Events {
 		// filter out events that are disliked
@@ -251,8 +257,9 @@ func (u *userHandler) recommendEvents(ctx *gin.Context) {
 		}
 
 		// remove duplicates
-		if _, ok := eventsToOccur[&event]; !ok {
+		if _, ok := eventsToOccur[event.Name]; !ok {
 			events = append(events, event)
+			eventsToOccur[event.Name] = &event
 		}
 	}
 	// calculate distance

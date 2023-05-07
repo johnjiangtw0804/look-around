@@ -2,12 +2,10 @@ package schema
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type User struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;uniqueIndex;default:uuid_generate_v4()"`
+	ID        string `gorm:"type:varchar(255);primary_key;uniqueIndex;"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	UserName  string `gorm:"not null;uniqueIndex"`

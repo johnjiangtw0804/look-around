@@ -222,7 +222,6 @@
 
     /**
      * API #2 Load favorite (or visited) items API end point: [GET]
-     * /Dashi/history?user_id=1111
      */
     function loadFavoriteItems() {
         activeBtn('fav-btn');
@@ -256,8 +255,8 @@
         activeBtn('recommend-btn');
 
         // The request parameters
-        var url = './recommendation';
-        var params = 'user_id=' + user_id + '&lat=' + lat + '&lon=' + lng;
+        var url = 'http://localhost:5500/api/user/events/recommend';
+        var params = 'lat=' + lat + '&long=' + lng;
 
         var req = JSON.stringify({});
 
@@ -270,12 +269,19 @@
             url + '?' + params,
             req,
             // successful callback
-            function(res) {
+            function (res) {
                 var items = JSON.parse(res);
                 if (!items || items.length === 0) {
-                    showWarningMessage('No recommended item. Make sure you have favorites.');
+                    showWarningMessage('No nearby item.');
                 } else {
-                    listItems(items);
+                    console.log(items);
+                    var itemList = $('item-list');
+                    itemList.innerHTML = '';
+                    for (var i = 0; i < items.events.length; i++) {
+                        console.log("This is event " + i);
+                        console.log(items.events[i]);
+                        addItem(itemList, items.events[i]);
+                    }
                 }
             },
             // failed callback
@@ -286,26 +292,25 @@
 
     /**
      * API #4 Toggle favorite (or visited) items
-     * 
+     *
      * @param item_id -
      *            The item business id
-     * 
+     *
      * API end point: [POST]/[DELETE] /Dashi/history request json data: {
      * user_id: 1111, visited: [a_list_of_business_ids] }
      */
-    function changeFavoriteItem(item_id) {
+    function changeFavoriteItem(item_id, genre, subgenre) {
         // Check whether this item has been visited or not
-        var li = $('item-' + item_id);
         var favIcon = $('fav-icon-' + item_id);
-        var favorite = li.dataset.favorite !== 'true';
 
         // The request parameters
-        var url = './history';
+        var url = 'http://localhost:5500/api/user/events/like';
         var req = JSON.stringify({
             user_id: user_id,
-            favorite: [item_id]
+            genre: genre,
+            subgenre: subgenre
         });
-        var method = favorite ? 'POST' : 'DELETE';
+        var method = 'POST';
 
         ajax(method, url, req,
             // successful callback
@@ -420,17 +425,24 @@
             className: 'fav-link'
         });
 
-        // favLink.onclick = function() {
-        //     changeFavoriteItem(item_id);
-        // };
+        favLink.onclick = function() {
+            changeFavoriteItem(item_id, item.genres[0], item.genres[1]);
+        };
 
-        // favLink.appendChild($('i', {
-        //     id: 'fav-icon-' + item_id,
-        //     className: item.favorite ? 'fa fa-heart' : 'fa fa-heart-o'
-        // }));
+        favLink.appendChild($('i', {
+            id: 'fav-icon-' + item_id,
+            className: item.favorite ? 'fa fa-heart' : 'fa fa-heart-o'
+        }));
 
         li.appendChild(favLink);
 
+        var distance = $('p', {
+            className: 'distance'
+        });
+        let miles = item.distance * 0.000621371;
+        distance.innerHTML = 'Distance: ' + miles.toFixed(2) + ' miles';
+
+        li.appendChild(distance);
         itemList.appendChild(li);
     }
 

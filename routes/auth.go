@@ -66,7 +66,7 @@ func (a *authHandler) login(ctx *gin.Context) {
 	}
 
 	signedToken, err := token.GenJWT(
-		user.ID.String(),
+		user.ID,
 		user.UserName,
 		time.Now().Add(jwtExpPeriod).Unix())
 	if err != nil {
