@@ -229,6 +229,18 @@ ul {
 	color: #F13F3F;
 }
 
+.not-fav-link {
+	border-left: 1px solid #FFFFFF;
+	cursor: pointer;
+	line-height: 60px;
+	text-align: center;
+	width: 60px;
+}
+
+.not-fav-link:hover {
+	color: purple;
+}
+
 /**
  * footer section
  */

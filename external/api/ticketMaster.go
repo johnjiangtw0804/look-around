@@ -14,7 +14,7 @@ import (
 const (
 	discoveryURL             = "https://app.ticketmaster.com/discovery/v2/events.json"
 	discoveryDEFAULT_KEYWORD = ""
-	discoveryDEFAULT_RADIUS  = 500
+	discoveryDEFAULT_RADIUS  = 1000
 	discoveryDEFAULT_UNIT    = "miles"
 )
 

@@ -14,7 +14,7 @@
     function init() {
         // Register event listeners
         $('nearby-btn').addEventListener('click', loadNearbyItems);
-        $('fav-btn').addEventListener('click', loadFavoriteItems);
+        // $('fav-btn').addEventListener('click', loadFavoriteItems);
         $('recommend-btn').addEventListener('click', loadRecommendedItems);
 
         var welcomeMsg = $('welcome-msg');
@@ -155,16 +155,17 @@
         xhr.open(method, url, true);
 
         xhr.onload = function() {
-        	if (xhr.status === 200) {
-        		callback(xhr.responseText);
-        	} else {
-        		errorHandler();
-        	}
+            if (xhr.status === 200) {
+                callback(xhr.responseText);
+                // } else {
+                // 	errorHandler();
+                // }
+            }
         };
 
         xhr.onerror = function() {
             console.error("The request couldn't be completed.");
-            errorHandler();
+            // errorHandler();
         };
 
         if (data === null) {
@@ -299,28 +300,52 @@
      * API end point: [POST]/[DELETE] /Dashi/history request json data: {
      * user_id: 1111, visited: [a_list_of_business_ids] }
      */
-    function changeFavoriteItem(item_id, genre, subgenre) {
-        // Check whether this item has been visited or not
-        var favIcon = $('fav-icon-' + item_id);
+    function changeFavoriteItem(item_id, genre, subgenre, like) {
+        if (like) {
+            // Check whether this item has been visited or not
+            var favIcon = $('fav-icon-' + item_id);
 
-        // The request parameters
-        var url = 'http://localhost:5500/api/user/events/like';
-        var req = JSON.stringify({
-            user_id: user_id,
-            genre: genre,
-            subgenre: subgenre
-        });
-        var method = 'POST';
-
-        ajax(method, url, req,
-            // successful callback
-            function(res) {
-                var result = JSON.parse(res);
-                if (result.result === 'SUCCESS') {
-                    li.dataset.favorite = favorite;
-                    favIcon.className = favorite ? 'fa fa-heart' : 'fa fa-heart-o';
-                }
+            // The request parameters
+            var url = 'http://localhost:5500/api/user/events/like';
+            var req = JSON.stringify({
+                user_id: user_id,
+                genre: genre,
+                subgenre: subgenre
             });
+            var method = 'POST';
+
+            ajax(method, url, req,
+                // successful callback
+                function (res) {
+                    var result = JSON.parse(res);
+                    if (result.result === 'SUCCESS') {
+                        li.dataset.favorite = favorite;
+                        favIcon.className = favorite ? 'fa fa-heart' : 'fa fa-heart-o';
+                    }
+                });
+        } else {
+            // Check whether this item has been visited or not
+            var favIcon = $('fav-icon-' + item_id);
+
+            // The request parameters
+            var url = 'http://localhost:5500/api/user/events/dislike';
+            var req = JSON.stringify({
+                user_id: user_id,
+                genre: genre,
+                subgenre: subgenre
+            });
+            var method = 'POST';
+
+            ajax(method, url, req,
+                // successful callback
+                function (res) {
+                    var result = JSON.parse(res);
+                    if (result.result === 'SUCCESS') {
+                        li.dataset.favorite = favorite;
+                        favIcon.className = favorite ? 'fa fa-heart' : 'fa fa-heart-o';
+                    }
+                });
+        }
     }
 
     // -------------------------------------
@@ -426,22 +451,38 @@
         });
 
         favLink.onclick = function() {
-            changeFavoriteItem(item_id, item.genres[0], item.genres[1]);
+            changeFavoriteItem(item_id, item.genres[0], item.genres[1], true);
         };
 
         favLink.appendChild($('i', {
             id: 'fav-icon-' + item_id,
-            className: item.favorite ? 'fa fa-heart' : 'fa fa-heart-o'
+            className: 'fa fa-heart'
         }));
 
         li.appendChild(favLink);
 
-        var distance = $('p', {
-            className: 'distance'
+        // don't like link
+        var dontLikeLink = $('p', {
+            className: 'not-fav-link'
         });
+
+        dontLikeLink.onclick = function() {
+            changeFavoriteItem(item_id, item.genres[0], item.genres[1], false);
+        };
+        dontLikeLink.appendChild($('i', {
+            id: 'fav-icon-' + item_id,
+            className: 'fa fa-wheelchair'
+        }));
+        li.appendChild(dontLikeLink);
+
+
+        var distance = document.createElement('p');
+        distance.appendChild($('p', {
+            className: 'distance'
+        }));
+
         let miles = item.distance * 0.000621371;
         distance.innerHTML = 'Distance: ' + miles.toFixed(2) + ' miles';
-
         li.appendChild(distance);
         itemList.appendChild(li);
     }
