@@ -266,5 +266,8 @@ func (u *userHandler) recommendEvents(ctx *gin.Context) {
 	for i := range events {
 		events[i].Distance, _ = u.mapUtilities.CalculateDistance(lat, long, events[i].Latitude, events[i].Longitude)
 	}
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Distance < events[j].Distance
+	})
 	ctx.JSON(http.StatusOK, listEventsResp{Events: events})
 }
